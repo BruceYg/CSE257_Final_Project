@@ -101,7 +101,7 @@ class LinearFullPosteriorSampling(BanditAlgorithm):
     except np.linalg.LinAlgError as e:
       # Sampling could fail if covariance is not positive definite
       print('Exception when sampling from {}.'.format(self.name))
-      print('Details: {} | {}.'.format(e.message, e.args))
+      #print('Details: {} | {}.'.format(e.message, e.args))
       d = self.hparams.context_dim + 1
       beta_s = [
           np.random.multivariate_normal(np.zeros((d)), np.eye(d))

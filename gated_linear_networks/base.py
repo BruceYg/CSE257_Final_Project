@@ -1,3 +1,6 @@
+from __future__ import print_function
+import sys
+import inspect
 # Lint as: python3
 # Copyright 2020 DeepMind Technologies Limited.
 #
@@ -157,13 +160,19 @@ class GatedLinearNetwork(LocalUpdateModule):
                 **kwargs) -> Array:
     """GatedLinearNetwork inference."""
     predictions_per_layer = []
+    #print(f'fuck: {type(inputs)}')
     predictions = inputs
+    weight_indexes_per_layer = []
+    #print("!!!!!!", file=sys.stderr)
+    #print(self._layers)
     for layer in self._layers:
+      #print(f'!!{predictions}', file=sys.stderr)
       predictions = self._add_bias(predictions)
-      predictions = layer.inference(predictions, side_info, *args, **kwargs)
+      predictions, weight_indexes = layer.inference(predictions, side_info, *args, **kwargs)
       predictions_per_layer.append(predictions)
+      weight_indexes_per_layer.append(weight_indexes)
 
-    return jnp.concatenate(predictions_per_layer, axis=0)
+    return jnp.concatenate(predictions_per_layer, axis=0), jnp.concatenate(weight_indexes_per_layer, axis=0)
 
   def update(self, inputs, side_info, target, learning_rate, *args, **kwargs):
     """GatedLinearNetwork update."""
@@ -267,17 +276,17 @@ class _GatedLinearLayer(LocalUpdateModule):
     """GatedLinearLayer inference."""
     # Initialize layer weights.
     weights = self._get_weights(inputs.shape[0])
-
+    
     # Initialize fixed random hyperplanes.
     side_info_size = side_info.shape[0]
     hyperplanes, hyperplane_bias = self._get_hyperplanes(side_info_size)
 
     # Perform layer-wise inference by mapping along output_size (num_neurons).
     layer_inference = _layer_vmap(self._inference_fn)
-    predictions = layer_inference(inputs, side_info, weights, hyperplanes,
+    predictions, weight_index = layer_inference(inputs, side_info, weights, hyperplanes,
                                   hyperplane_bias, *args, **kwargs)
 
-    return predictions
+    return predictions, weight_index
 
   def update(self, inputs: Array, side_info: Array, target: Array,
              learning_rate: float, *args,
@@ -333,14 +342,16 @@ class LastNeuronAggregator(Mutator):
       name: str = "last_neuron",
   ):
     super(LastNeuronAggregator, self).__init__(network_factory, name)
+    #print("who are u")
     if self._network.output_sizes[-1] != 1:
       raise ValueError(
           "LastNeuronAggregator requires the last GLN layer to have"
           " output_size = 1.")
 
   def inference(self, *args, **kwargs) -> Array:
-    predictions = self._network.inference(*args, **kwargs)
-    return predictions[-1]
+    #print(f'wtfFFFf: {inputs}')
+    predictions, weight_indexes = self._network.inference(*args, **kwargs)
+    return predictions[-1], weight_indexes
 
   def update(self, *args, **kwargs) -> Tuple[Array, Array, Array]:
     params_t, predictions_tm1, loss_tm1 = self._network.update(*args, **kwargs)

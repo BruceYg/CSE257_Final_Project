@@ -52,154 +52,15 @@ from bandits.data.synthetic_data_sampler import sample_linear_data
 from bandits.data.synthetic_data_sampler import sample_sparse_linear_data
 from bandits.data.synthetic_data_sampler import sample_wheel_bandit_data
 from bandits.algorithms.uniform_sampling import UniformSampling
+from bandits.data.data_sampler import classification_to_bandit_problem
 
-# Set up your file routes to the data files.
-base_route = os.getcwd()
-data_route = 'contextual_bandits/datasets'
+import tensorflow as tf
+import pandas as pd
+import numpy as np
 
 FLAGS = flags.FLAGS
 FLAGS.set_default('alsologtostderr', True)
 flags.DEFINE_string('logdir', '/tmp/bandits/', 'Base directory to save output')
-flags.DEFINE_string(
-    'mushroom_data',
-    os.path.join(base_route, data_route, 'mushroom.data'),
-    'Directory where Mushroom data is stored.')
-flags.DEFINE_string(
-    'financial_data',
-    os.path.join(base_route, data_route, 'raw_stock_contexts'),
-    'Directory where Financial data is stored.')
-flags.DEFINE_string(
-    'jester_data',
-    os.path.join(base_route, data_route, 'jester_data_40jokes_19181users.npy'),
-    'Directory where Jester data is stored.')
-flags.DEFINE_string(
-    'statlog_data',
-    os.path.join(base_route, data_route, 'shuttle.trn'),
-    'Directory where Statlog data is stored.')
-flags.DEFINE_string(
-    'adult_data',
-    os.path.join(base_route, data_route, 'adult.full'),
-    'Directory where Adult data is stored.')
-flags.DEFINE_string(
-    'covertype_data',
-    os.path.join(base_route, data_route, 'covtype.data'),
-    'Directory where Covertype data is stored.')
-flags.DEFINE_string(
-    'census_data',
-    os.path.join(base_route, data_route, 'USCensus1990.data.txt'),
-    'Directory where Census data is stored.')
-
-
-def sample_data(data_type, num_contexts=None):
-  """Sample data from given 'data_type'.
-
-  Args:
-    data_type: Dataset from which to sample.
-    num_contexts: Number of contexts to sample.
-
-  Returns:
-    dataset: Sampled matrix with rows: (context, reward_1, ..., reward_num_act).
-    opt_rewards: Vector of expected optimal reward for each context.
-    opt_actions: Vector of optimal action for each context.
-    num_actions: Number of available actions.
-    context_dim: Dimension of each context.
-  """
-
-  if data_type == 'linear':
-    # Create linear dataset
-    num_actions = 8
-    context_dim = 10
-    noise_stds = [0.01 * (i + 1) for i in range(num_actions)]
-    dataset, _, opt_linear = sample_linear_data(num_contexts, context_dim,
-                                                num_actions, sigma=noise_stds)
-    opt_rewards, opt_actions = opt_linear
-  elif data_type == 'sparse_linear':
-    # Create sparse linear dataset
-    num_actions = 7
-    context_dim = 10
-    noise_stds = [0.01 * (i + 1) for i in range(num_actions)]
-    num_nnz_dims = int(context_dim / 3.0)
-    dataset, _, opt_sparse_linear = sample_sparse_linear_data(
-        num_contexts, context_dim, num_actions, num_nnz_dims, sigma=noise_stds)
-    opt_rewards, opt_actions = opt_sparse_linear
-  elif data_type == 'mushroom':
-    # Create mushroom dataset
-    num_actions = 2
-    context_dim = 117
-    file_name = FLAGS.mushroom_data
-    dataset, opt_mushroom = sample_mushroom_data(file_name, num_contexts)
-    opt_rewards, opt_actions = opt_mushroom
-  elif data_type == 'financial':
-    num_actions = 8
-    context_dim = 21
-    num_contexts = min(3713, num_contexts)
-    noise_stds = [0.01 * (i + 1) for i in range(num_actions)]
-    file_name = FLAGS.financial_data
-    dataset, opt_financial = sample_stock_data(file_name, context_dim,
-                                               num_actions, num_contexts,
-                                               noise_stds, shuffle_rows=True)
-    opt_rewards, opt_actions = opt_financial
-  elif data_type == 'jester':
-    num_actions = 8
-    context_dim = 32
-    num_contexts = min(19181, num_contexts)
-    file_name = FLAGS.jester_data
-    dataset, opt_jester = sample_jester_data(file_name, context_dim,
-                                             num_actions, num_contexts,
-                                             shuffle_rows=True,
-                                             shuffle_cols=True)
-    opt_rewards, opt_actions = opt_jester
-  elif data_type == 'statlog':
-    file_name = FLAGS.statlog_data
-    num_actions = 7
-    num_contexts = min(43500, num_contexts)
-    sampled_vals = sample_statlog_data(file_name, num_contexts,
-                                       shuffle_rows=True)
-    contexts, rewards, (opt_rewards, opt_actions) = sampled_vals
-    dataset = np.hstack((contexts, rewards))
-    context_dim = contexts.shape[1]
-  elif data_type == 'adult':
-    file_name = FLAGS.adult_data
-    num_actions = 14
-    num_contexts = min(45222, num_contexts)
-    sampled_vals = sample_adult_data(file_name, num_contexts,
-                                     shuffle_rows=True)
-    contexts, rewards, (opt_rewards, opt_actions) = sampled_vals
-    dataset = np.hstack((contexts, rewards))
-    context_dim = contexts.shape[1]
-  elif data_type == 'covertype':
-    file_name = FLAGS.covertype_data
-    num_actions = 7
-    num_contexts = min(150000, num_contexts)
-    sampled_vals = sample_covertype_data(file_name, num_contexts,
-                                         shuffle_rows=True)
-    contexts, rewards, (opt_rewards, opt_actions) = sampled_vals
-    dataset = np.hstack((contexts, rewards))
-    context_dim = contexts.shape[1]
-  elif data_type == 'census':
-    file_name = FLAGS.census_data
-    num_actions = 9
-    num_contexts = min(150000, num_contexts)
-    sampled_vals = sample_census_data(file_name, num_contexts,
-                                      shuffle_rows=True)
-    contexts, rewards, (opt_rewards, opt_actions) = sampled_vals
-    dataset = np.hstack((contexts, rewards))
-    context_dim = contexts.shape[1]
-  elif data_type == 'wheel':
-    delta = 0.95
-    num_actions = 5
-    context_dim = 2
-    mean_v = [1.0, 1.0, 1.0, 1.0, 1.2]
-    std_v = [0.05, 0.05, 0.05, 0.05, 0.05]
-    mu_large = 50
-    std_large = 0.01
-    dataset, opt_wheel = sample_wheel_bandit_data(num_contexts, delta,
-                                                  mean_v, std_v,
-                                                  mu_large, std_large)
-    opt_rewards, opt_actions = opt_wheel
-
-  return dataset, opt_rewards, opt_actions, num_actions, context_dim
-
 
 def display_results(algos, opt_rewards, opt_actions, h_rewards, t_init, name):
   """Displays summary statistics of the performance of each algorithm."""
@@ -229,16 +90,39 @@ def display_results(algos, opt_rewards, opt_actions, h_rewards, t_init, name):
 
 def main(_):
 
-  # Problem parameters
-  num_contexts = 5000
-
-  # Data type in {linear, sparse_linear, mushroom, financial, jester,
-  #                 statlog, adult, covertype, census, wheel}
-  data_type = 'adult'
-
   # Create dataset
-  sampled_vals = sample_data(data_type, num_contexts)
-  dataset, opt_rewards, opt_actions, num_actions, context_dim = sampled_vals
+  data_path = 'ml-100k/u.data'
+  user_path = 'ml-100k/u.user'
+  movie_path = 'ml-100k/u.item'
+  with tf.io.gfile.GFile(data_path, 'r') as f:
+    df = pd.read_csv(f, sep='\t', header=None, na_values=['?']).dropna()
+
+  df.drop(3, axis=1, inplace=True)
+  num_contexts = 2000
+  num_actions = 5
+  df = df.sample(frac=1)
+  df = df.iloc[:num_contexts, :]
+  labels = df[2].astype('category').cat.codes.to_numpy()
+  pairs = df.drop(2, axis=1).to_numpy()
+  user_indexes = pairs[:,0] - 1
+  movie_indexes = pairs[:,1] - 1
+
+  with tf.io.gfile.GFile(user_path, 'r') as f:
+    df_user = pd.read_csv(f, sep='|', header=None, na_values=['?']).dropna()
+  df_user.drop(4, axis=1, inplace=True)
+  cols_to_transform = [2,3]
+  df_user = pd.get_dummies(df_user, columns=cols_to_transform).to_numpy()
+  user_data = np.take(df_user, user_indexes, axis=0)[:, 1:]
+
+  df_movie = pd.read_csv(movie_path, header=None, sep='|', encoding='latin-1')
+  df_movie = df_movie.drop([1,2,3,4], axis=1).to_numpy()
+  movie_data = np.take(df_movie, movie_indexes, axis=0)[:, 1:]
+
+  contexts = np.hstack((user_data, movie_data))
+  sampled_vals = classification_to_bandit_problem(contexts, labels, num_actions)
+  contexts, rewards, (opt_rewards, opt_actions) = sampled_vals
+  dataset = np.hstack((contexts, rewards))
+  context_dim = contexts.shape[1]
 
   # Define hyperparameters and algorithms
   hparams = HParams(num_actions=num_actions)
@@ -428,20 +312,20 @@ def main(_):
                                            activate_decay=False)
 
   algos = [
-      UniformSampling('Uniform Sampling', hparams),
-      UniformSampling('Uniform Sampling 2', hparams),
+      #UniformSampling('Uniform Sampling', hparams),
+      #UniformSampling('Uniform Sampling 2', hparams),
       #FixedPolicySampling('fixed1', [0.75, 0.25], hparams),
       #FixedPolicySampling('fixed2', [0.25, 0.75], hparams),
       PosteriorBNNSampling('RMS', hparams_rms, 'RMSProp'),
       PosteriorBNNSampling('Dropout', hparams_dropout, 'RMSProp'),
       PosteriorBNNSampling('BBB', hparams_bbb, 'Variational'),
       NeuralLinearPosteriorSampling('NeuralLinear', hparams_nlinear),
-      NeuralLinearPosteriorSampling('NeuralLinear2', hparams_nlinear2),
+      #NeuralLinearPosteriorSampling('NeuralLinear2', hparams_nlinear2),
       LinearFullPosteriorSampling('LinFullPost', hparams_linear),
       BootstrappedBNNSampling('BootRMS', hparams_rms),
       ParameterNoiseSampling('ParamNoise', hparams_pnoise),
       PosteriorBNNSampling('BBAlphaDiv', hparams_alpha_div, 'AlphaDiv'),
-      PosteriorBNNSampling('MultitaskGP', hparams_gp, 'GP'),
+      #PosteriorBNNSampling('MultitaskGP', hparams_gp, 'GP'),
   ]
 
   # Run contextual bandit problem
@@ -449,12 +333,25 @@ def main(_):
   results = run_contextual_bandit(context_dim, num_actions, dataset, algos)
   _, h_rewards, h_accumulative_rewards, h_regrets = results
 
-  time_step = np.arange(1, num_contexts+1)
-  plt.plot(time_step, h_accumulative_rewards[1:, 0])
-  plt.savefig('linear.png')
-
+  #time_step = np.arange(1, num_contexts+1)
+  #plt.plot(time_step, h_accumulative_rewards[1:, 0])
+  #plt.savefig('linear.png')
+  '''
+  with open('BBB_statlog_acc_rewards.txt', 'w') as f:
+    for item in h_accumulative_rewards[1:, 1]:
+      f.write("%s\n" % item)
+  with open('Dropout_statlog_acc_rewards.txt', 'w') as f:
+    for item in h_accumulative_rewards[1:, 0]:
+      f.write("%s\n" % item)
+  with open('BBB_statlog_regrets.txt', 'w') as f:
+    for item in h_regrets[1:, 1]:
+      f.write("%s\n" % item)
+  with open('Dropout_statlog_regrets.txt', 'w') as f:
+    for item in h_regrets[1:, 0]:
+      f.write("%s\n" % item)
+  '''
   # Display results
-  display_results(algos, opt_rewards, opt_actions, h_rewards, t_init, data_type)
+  display_results(algos, opt_rewards, opt_actions, h_rewards, t_init, 'movie')
 
 if __name__ == '__main__':
   app.run(main)

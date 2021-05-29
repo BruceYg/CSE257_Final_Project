@@ -26,7 +26,10 @@ from __future__ import print_function
 
 import sys
 import numpy as np
-import tensorflow as tf
+#import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+import tf_slim as slim
 from absl import flags
 import tensorflow_probability as tfp
 

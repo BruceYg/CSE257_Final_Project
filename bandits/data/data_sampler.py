@@ -179,7 +179,7 @@ def sample_statlog_data(file_name, num_contexts, shuffle_rows=True,
   https://archive.ics.uci.edu/ml/datasets/Statlog+(Shuttle)
   """
 
-  with tf.gfile.Open(file_name, 'r') as f:
+  with tf.io.gfile.GFile(file_name, 'r') as f:
     data = np.loadtxt(f)
 
   num_actions = 7  # some of the actions are very rarely optimal.
@@ -313,7 +313,7 @@ def sample_covertype_data(file_name, num_contexts, shuffle_rows=True,
 
   https://archive.ics.uci.edu/ml/datasets/Covertype
   """
-  with tf.gfile.Open(file_name, 'r') as f:
+  with tf.io.gfile.GFile(file_name, 'r') as f:
     df = (pd.read_csv(f, header=0, na_values=['?'])
           .dropna())
 
@@ -325,13 +325,13 @@ def sample_covertype_data(file_name, num_contexts, shuffle_rows=True,
 
   # Assuming what the paper calls response variable is the label?
   # Last column is label.
-  labels = df[df.columns[-1]].astype('category').cat.codes.as_matrix()
+  labels = df[df.columns[-1]].astype('category').cat.codes.to_numpy()
   df = df.drop([df.columns[-1]], axis=1)
 
   # All columns are either quantitative or already converted to 1 hot.
   if remove_underrepresented:
     df, labels = remove_underrepresented_classes(df, labels)
-  contexts = df.as_matrix()
+  contexts = df.to_numpy()
 
   return classification_to_bandit_problem(contexts, labels, num_actions)
 

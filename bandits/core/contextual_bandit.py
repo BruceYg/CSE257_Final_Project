@@ -64,7 +64,8 @@ def run_contextual_bandit(context_dim, num_actions, dataset, algos):
     h_actions = np.vstack((h_actions, np.array(actions)))
     h_rewards = np.vstack((h_rewards, np.array(rewards)))
     h_accumulative_rewards = np.vstack((h_accumulative_rewards, h_accumulative_rewards[-1]+np.array(rewards)))
-    h_regrets = np.vstack((h_regrets, h_accumulative_rewards[-1] - opt_reward))
+    #h_regrets = np.vstack((h_regrets, h_accumulative_rewards[-1] - opt_reward))
+    h_regrets = np.vstack((h_regrets, np.array([1.]*len(algos)).reshape((1, len(algos))) - np.array(rewards)))
 
   return h_actions, h_rewards, h_accumulative_rewards, h_regrets
 
