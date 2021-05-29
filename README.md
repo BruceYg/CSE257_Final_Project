@@ -1,6 +1,8 @@
-# CSE257_Final_Project
+# GLCB
 
 This repository contains implementation for <em> Report on Online Learning in Contextual Bandits using Gated Linear Networks (NeurIPS 2020) </em>.
+
+Part of the implementation follows <https://github.com/deepmind/deepmind-research/tree/master/gated_linear_networks> and <https://github.com/tensorflow/models/tree/archive/research/deep_contextual_bandits>.
 
 ## Installation
 
