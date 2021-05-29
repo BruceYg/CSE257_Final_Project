@@ -1,5 +1,6 @@
 # CSE257_Final_Project
-This repository contains implementation for <em> Report on Online Learning in Contextual Bandits using Gated Linear Networks (NeurIPS 2020) <\em>.
+
+This repository contains implementation for <em> Report on Online Learning in Contextual Bandits using Gated Linear Networks (NeurIPS 2020) </em>.
 
 ## Installation
 
@@ -26,11 +27,11 @@ python3 GLCB.py
 # on datasets in Section 2
 python3 baseline.py
 
-# Run GLCB on <em>MovieLens 100K<\em>
+# Run GLCB on MovieLens 100K
 python3 GLCB_movie.py
 
 # Run Thompson Sampling based algorithms
-# on <em>MovieLens 100K<\em>
+# on MovieLens 100K
 python3 baseline_movie.py
 ```
 
