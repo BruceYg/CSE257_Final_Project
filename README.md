@@ -36,8 +36,8 @@ python3 baseline_movie.py
 
 Make sure to download the datasets using the links below and put the data files inside ./contextual_bandits/datasets.
 
-[Adult](https://storage.googleapis.com/bandits_datasets/adult.full)
-[Census](https://storage.googleapis.com/bandits_datasets/USCensus1990.data.txt)
-[Covertype](https://storage.googleapis.com/bandits_datasets/covtype.data)
-[Statlog](https://storage.googleapis.com/bandits_datasets/shuttle.trn)
+[Adult](https://storage.googleapis.com/bandits_datasets/adult.full)\
+[Census](https://storage.googleapis.com/bandits_datasets/USCensus1990.data.txt)\
+[Covertype](https://storage.googleapis.com/bandits_datasets/covtype.data)\
+[Statlog](https://storage.googleapis.com/bandits_datasets/shuttle.trn)\
 [MovieLens](https://files.grouplens.org/datasets/movielens/ml-100k.zip) Unzip and put the folder in ./
