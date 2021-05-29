@@ -230,7 +230,7 @@ def display_results(algos, opt_rewards, opt_actions, h_rewards, t_init, name):
 def main(_):
 
   # Problem parameters
-  num_contexts = 5000
+  num_contexts = 2000
 
   # Data type in {linear, sparse_linear, mushroom, financial, jester,
   #                 statlog, adult, covertype, census, wheel}
@@ -432,15 +432,15 @@ def main(_):
       #UniformSampling('Uniform Sampling 2', hparams),
       #FixedPolicySampling('fixed1', [0.75, 0.25], hparams),
       #FixedPolicySampling('fixed2', [0.25, 0.75], hparams),
-      #PosteriorBNNSampling('RMS', hparams_rms, 'RMSProp'),
+      PosteriorBNNSampling('RMS', hparams_rms, 'RMSProp'),
       PosteriorBNNSampling('Dropout', hparams_dropout, 'RMSProp'),
       PosteriorBNNSampling('BBB', hparams_bbb, 'Variational'),
-      #NeuralLinearPosteriorSampling('NeuralLinear', hparams_nlinear),
+      NeuralLinearPosteriorSampling('NeuralLinear', hparams_nlinear),
       #NeuralLinearPosteriorSampling('NeuralLinear2', hparams_nlinear2),
-      #LinearFullPosteriorSampling('LinFullPost', hparams_linear),
-      #BootstrappedBNNSampling('BootRMS', hparams_rms),
-      #ParameterNoiseSampling('ParamNoise', hparams_pnoise),
-      #PosteriorBNNSampling('BBAlphaDiv', hparams_alpha_div, 'AlphaDiv'),
+      LinearFullPosteriorSampling('LinFullPost', hparams_linear),
+      BootstrappedBNNSampling('BootRMS', hparams_rms),
+      ParameterNoiseSampling('ParamNoise', hparams_pnoise),
+      PosteriorBNNSampling('BBAlphaDiv', hparams_alpha_div, 'AlphaDiv'),
       #PosteriorBNNSampling('MultitaskGP', hparams_gp, 'GP'),
   ]
 
@@ -452,6 +452,7 @@ def main(_):
   #time_step = np.arange(1, num_contexts+1)
   #plt.plot(time_step, h_accumulative_rewards[1:, 0])
   #plt.savefig('linear.png')
+  '''
   with open('BBB_statlog_acc_rewards.txt', 'w') as f:
     for item in h_accumulative_rewards[1:, 1]:
       f.write("%s\n" % item)
@@ -464,7 +465,7 @@ def main(_):
   with open('Dropout_statlog_regrets.txt', 'w') as f:
     for item in h_regrets[1:, 0]:
       f.write("%s\n" % item)
-
+  '''
   # Display results
   display_results(algos, opt_rewards, opt_actions, h_rewards, t_init, data_type)
 

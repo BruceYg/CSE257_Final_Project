@@ -231,7 +231,7 @@ import math
 #import bernoulli
 #from examples import utils
 
-MAX_TRAIN_STEPS = 5000
+MAX_TRAIN_STEPS = 2000
 
 # Small example network, achieves ~95% test set accuracy =======================
 # Network parameters.
@@ -539,7 +539,7 @@ def main(_):
 
   for step, (image, label) in enumerate(zip(dataset, labels), 1):
     # image -> context x_t
-    print(step)
+    #print(step)
     psudo_count = jnp.zeros((num_classes,))
     predictions, signatures = GLN(params, state, image)
     for a in range(num_classes):
@@ -616,16 +616,16 @@ def main(_):
     N_su_a = jax.ops.index_update(N_su_a, action, update_N)
 
     if MAX_TRAIN_STEPS is not None and step >= MAX_TRAIN_STEPS:
-      print(f'Optimal total rewards: {step}')
+      print(f'Optimal total rewards for {data_type}: {step}')
       print(f'Total rewards gained by GLCB: {total_rewards}')
-      
+      '''
       with open('GLCB_statlog_rewards.txt', 'w') as f:
         for item in rewards:
           f.write("%s\n" % item)
       with open('GLCB_statlog_regrets.txt', 'w') as f:
         for item in regrets:
           f.write("%s\n" % item)
-      
+      '''
       return
 
 if __name__ == '__main__':

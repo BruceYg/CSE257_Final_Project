@@ -423,7 +423,7 @@ def main(_):
 
   for step, (image, label) in enumerate(zip(dataset, labels), 1):
     # image -> context x_t
-    print(step)
+    #print(step)
     psudo_count = jnp.zeros((num_classes,))
     predictions, signatures = GLN(params, state, image)
     for a in range(num_classes):
